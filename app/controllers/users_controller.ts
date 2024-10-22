@@ -5,7 +5,10 @@ import { type HttpContext } from '@adonisjs/core/http'
 
 export default class UsersController {
     private service: UserService;
-
+    
+    /** Instância o serviço com a regra de negócio a ser utilizada 
+     * 
+     */
     constructor() {
         this.service = new UserService()
     }
@@ -21,30 +24,37 @@ export default class UsersController {
      * @paramQuery email - Email do usuário - @type(string)
      * @paramQuery active - Indica se vai buscar os usuários ativos ou inativos (OBS: Quando não informado o endpoint trará todos) - @type(boolean)
      * 
-     * @responseBody 200 - <UsersResponse> - Busca todos os usuários de acordo com os parâmetros informados
-     * @responseBody 400 - {status: false, message: "Falha ao processar requisição", data: {}}
+     * @responseBody 200 - <ResponseAll> - Busca todos os usuários de acordo com os parâmetros informados
+     * @responseBody 400 - {status: false, message: "Falha ao processar requisição!", data: {}}
+     * @responseBody 401 - {status: false, message: "Usuário não autenticado!", data: {}}
+     * @responseBody 403 - {status: false, message: "Usuário não possui permissão de acesso ao recurso!", data: {}}
+     * @responseBody 500 - {status: false, message: "Falha interna do servidor! Contate o suporte.", data: {}}
      */
     public async index({ request, response }: HttpContext) {
         const params = request.qs()
         const result: UserInterface[] = await this.service.index(params)
         return response.status(200).send({
             status: true,
-            message: `${result.length} registros encontrados!`,
+            message: `${result.length == 1? result.length + 'registro encontrado!' : result.length + 'registros encontrados!' }`,
             data: result
         })
     }
 
     /**
      * @show 
-     * @summary Buscar usuário pelo ID.
+     * @summary Buscar usuário pelo ID
      * 
      * @operationId Busca por ID
      * @tag Usuário
      * 
-     * @paramPath id - ID do usuário - @type(number)
+     * @paramPath id - ID do usuário - @type(number) @required
      * 
-     * @responseBody 200 - <UserResponse> - Busca o usuário de acordo com o id informado.
-     * @responseBody 404 - {status: false, message: "Falha ao processar requisição", data: {}}
+     * @responseBody 200 - <ResponseById> - Busca o usuário de acordo com o parâmetro informado.
+     * @responseBody 400 - {status: false, message: "Falha ao processar requisição!", data: {}}
+     * @responseBody 401 - {status: false, message: "Usuário não autenticado!", data: {}}
+     * @responseBody 403 - {status: false, message: "Usuário não possui permissão de acesso ao recurso!", data: {}}
+     * @responseBody 404 - {status: false, message: "Usuário não localizado!", data: {}}
+     * @responseBody 500 - {status: false, message: "Falha interna do servidor! Contate o suporte.", data: {}}
      */
     public async show({ params, response }: HttpContext) {
         const result: UserInterface = await this.service.show(params.id)
@@ -57,15 +67,18 @@ export default class UsersController {
 
     /**
      * @create 
-     * @summary Rota de busca dos dados de um usuário pelo id.
+     * @summary Cadastrar um novo usuário
      * 
      * @operationId Cadastrar
      * @tag Usuário
      * 
-     * @paramPath id - ID do usuário - @type(number)
+     * @requestBody <createUser>
      * 
-     * @responseBody 200 - <UserResponse> - Busca o usuário de acordo com o id informado.
-     * @responseBody 404 - {status: false, message: "Falha ao processar requisição", data: {}}
+     * @responseBody 201 - <ResponseCreate> - Cadastra um novo usuário com as informações passadas.
+     * @responseBody 400 - {status: false, message: "Falha ao processar requisição!", data: {}}
+     * @responseBody 401 - {status: false, message: "Usuário não autenticado!", data: {}}
+     * @responseBody 403 - {status: false, message: "Usuário não possui permissão de acesso ao recurso!", data: {}}
+     * @responseBody 500 - {status: false, message: "Falha interna do servidor! Contate o suporte.", data: {}}
      */
     public async create({ request, response, auth }: HttpContext) {
         const data = await createUser.validate(request.all())
@@ -84,15 +97,20 @@ export default class UsersController {
 
     /**
      * @update 
-     * @summary Rota de busca dos dados de um usuário pelo id.
+     * @summary Ativar/Inativar um usuário
      * 
      * @operationId Atualizar
      * @tag Usuário
      * 
-     * @paramPath id - ID do usuário - @type(number)
+     * @paramPath id - ID do usuário - @type(number) @required
+     *
      * 
-     * @responseBody 200 - <UserResponse> - Busca o usuário de acordo com o id informado.
-     * @responseBody 404 - {status: false, message: "Falha ao processar requisição", data: {}}
+     * @responseBody 204 - <ResponseUpdate> - Atualiza os dados do usuário de acordo com o ID informado.
+     * @responseBody 400 - {status: false, message: "Falha ao processar requisição!", data: {}}
+     * @responseBody 401 - {status: false, message: "Usuário não autenticado!", data: {}}
+     * @responseBody 403 - {status: false, message: "Usuário não possui permissão de acesso ao recurso!", data: {}}
+     * @responseBody 404 - {status: false, message: "Usuário não localizado!", data: {}}
+     * @responseBody 500 - {status: false, message: "Falha interna do servidor! Contate o suporte.", data: {}}
      */
     public async update({ request, params, response, auth }: HttpContext) {
         const { id } = params
@@ -113,15 +131,21 @@ export default class UsersController {
 
     /**
      * @active 
-     * @summary Rota de busca dos dados de um usuário pelo id.
+     * @summary Atualizar os dados de um usuário
      * 
      * @operationId Ativar
      * @tag Usuário
      * 
-     * @paramPath id - ID do usuário - @type(number)
+     * @paramPath id - ID do usuário - @type(number) @required
      * 
-     * @responseBody 200 - <UserResponse> - Busca o usuário de acordo com o id informado.
-     * @responseBody 404 - {status: false, message: "Falha ao processar requisição", data: {}}
+     * @requestBody <updateUser>
+     * 
+     * @responseBody 204 - <ResponseUpdate> - Ativa/Inativa o usuário de acordo com o ID informado.
+     * @responseBody 400 - {status: false, message: "Falha ao processar requisição!", data: {}}
+     * @responseBody 401 - {status: false, message: "Usuário não autenticado!", data: {}}
+     * @responseBody 403 - {status: false, message: "Usuário não possui permissão de acesso ao recurso!", data: {}}
+     * @responseBody 404 - {status: false, message: "Usuário não localizado!", data: {}}
+     * @responseBody 500 - {status: false, message: "Falha interna do servidor! Contate o suporte.", data: {}}
      */
     public async active({ params, response, auth }: HttpContext) {
         const { id } = params
@@ -136,21 +160,25 @@ export default class UsersController {
 
     /**
      * @login 
-     * @summary Rota de busca dos dados de um usuário pelo id.
+     * @summary Login de usuário
      * 
      * @operationId Login
      * @tag Usuário
      * 
-     * @paramPath id - ID do usuário - @type(number)
+     * @requestBody <login>
      * 
-     * @responseBody 200 - <UserResponse> - Busca o usuário de acordo com o id informado.
-     * @responseBody 404 - {status: false, message: "Falha ao processar requisição", data: {}}
+     * @responseBody 200 - <ResponseById> - Retorna os dados do usuário autenticado.
+     * @responseBody 400 - {status: false, message: "Falha ao processar requisição!", data: {}}
+     * @responseBody 401 - {status: false, message: "Usuário não autenticado!", data: {}}
+     * @responseBody 403 - {status: false, message: "Usuário não possui permissão de acesso ao recurso!", data: {}}
+     * @responseBody 404 - {status: false, message: "Usuário não localizado!", data: {}}
+     * @responseBody 500 - {status: false, message: "Falha interna do servidor! Contate o suporte.", data: {}}
      */
     public async login({ request, response }: HttpContext) {
         const { email, password } = await login.validate(request.all())
 
         const result: UserInterface = await this.service.login(email, password)
-        return response.status(201).send({
+        return response.status(200).send({
             status: true,
             message: `Usuário autenticado com sucesso!`,
             data: result

@@ -1,7 +1,3 @@
-Claro, aqui está um exemplo de um README básico para sua API em AdonisJS 6, destacando os pontos que você mencionou:
-
----
-
 # API Exemplo
 
 ## Descrição

@@ -7,14 +7,25 @@ import db from '@adonisjs/lucid/services/db'
 import { test } from '@japa/runner'
 import sinon from 'sinon'
 
-/** Grupo de seleção dos testes unitários */
+/** 
+ * Grupo de Testes Unitários para o UserService
+ * 
+ * Este grupo de testes verifica as funcionalidades do UserService, incluindo
+ * a indexação, criação, atualização, ativação e login de usuários.
+ */
 test.group('Testes Unitários - UsuarioService', (group) => {
+  
   // Configuração para iniciar uma transação e executar o rollback a cada teste realizado.
   group.each.setup(async () => {
     await db.beginGlobalTransaction()
     return () => db.rollbackGlobalTransaction()
   })
 
+  /** 
+   * Teste para listar usuários
+   * 
+   * Este teste verifica se o método index retorna usuários corretamente.
+   */
   test('index', async ({ assert }) => {
     const user = await UserFactory.with('access', 1).create()
     const result = await new UserService().index({})
@@ -24,13 +35,22 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     assert.equal(result[0].id, user.id)
   })
 
+  /** 
+   * Teste para busca vazia
+   * 
+   * Este teste verifica se o método index retorna um array vazio quando não há usuários.
+   */
   test('index - Busca vazia', async ({ assert }) => {
     const result = await new UserService().index({})
-
     assert.exists(result)
     assert.equal(result.length, 0)
   })
 
+  /** 
+   * Teste para busca com parâmetros
+   * 
+   * Este teste verifica se o método index retorna o usuário correto ao buscar por nome.
+   */
   test('index - Busca com parâmetros', async ({ assert }) => {
     const users = await UserFactory.with('access').createMany(3)
     const result = await new UserService().index({ fullname: users[0].fullname })
@@ -40,6 +60,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     assert.equal(result[0].id, users[0].id)
   })
 
+  /** 
+   * Teste para exibir usuário
+   * 
+   * Este teste verifica se o método show retorna o usuário correto baseado no ID.
+   */
   test('show', async ({ assert }) => {
     const user = await UserFactory.with('access', 1).create()
     const result = await new UserService().show(user.id)
@@ -48,6 +73,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     assert.equal(result.id, user.id)
   })
 
+  /** 
+   * Teste para ID inválido na busca de usuário
+   * 
+   * Este teste verifica se o método show lança um erro ao tentar buscar um usuário com ID inválido.
+   */
   test('show - ID inválido', async ({ assert }) => {
     try {
       await new UserService().show(123)
@@ -58,18 +88,27 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     }
   })
 
+  /** 
+   * Teste para criação de usuário
+   * 
+   * Este teste verifica se o método create salva um novo usuário corretamente.
+   */
   test('create', async ({ assert }) => {
     const user = await UserFactory.with('access', 1).make()
     const result = await new UserService().create(user, 'Teste')
+
     assert.exists(result)
     assert.equal(result, user.id)
   })
 
+  /** 
+   * Teste para falha de validação na criação de usuário
+   * 
+   * Este teste verifica se o método create lança um erro de validação quando os dados são inválidos.
+   */
   test('create - Falha de validação', async ({ assert }) => {
     try {
-      let user = {
-        fullname: 'Teste'
-      }
+      let user = { fullname: 'Teste' }
       await new UserService().create(user, 'teste')
       assert.fail('O método não deveria ter retornado sucesso com um ID inválido')
     } catch (error) {
@@ -77,6 +116,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     }
   })
 
+  /** 
+   * Teste para atualização de usuário
+   * 
+   * Este teste verifica se o método update atualiza os dados do usuário corretamente.
+   */
   test('update', async ({ assert }) => {
     try {
       const user = await UserFactory.with('access', 1).create()
@@ -96,6 +140,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     }
   })
 
+  /** 
+   * Teste para ID inválido na atualização de usuário
+   * 
+   * Este teste verifica se o método update lança um erro ao tentar atualizar um usuário com ID inválido.
+   */
   test('update - ID inválido', async ({ assert }) => {
     try {
       await UserFactory.with('access', 1).create()
@@ -116,6 +165,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     }
   })
 
+  /** 
+   * Teste para atualização de usuário com email existente
+   * 
+   * Este teste verifica se o método update lança um erro ao tentar atualizar um usuário para um email que já existe.
+   */
   test('update - Com email existente', async ({ assert }) => {
     try {
       const users = await UserFactory.with('access', 1).createMany(2)
@@ -132,10 +186,15 @@ test.group('Testes Unitários - UsuarioService', (group) => {
       assert.fail('O método não deveria ter retornado sucesso com um ID inválido')
     } catch (error) {
       assert.exists(error)
-      assert.equal(error.code, '23505')
+      assert.equal(error.code, '23505') // Código de erro para violação de restrição única
     }
   })
 
+  /** 
+   * Teste para ativação de usuário
+   * 
+   * Este teste verifica se o método active ativa um usuário corretamente.
+   */
   test('active', async ({ assert }) => {
     const user = await UserFactory.with('access', 1).create()
 
@@ -144,6 +203,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     assert.isBoolean(result)
   })
 
+  /** 
+   * Teste para ID inválido na ativação de usuário
+   * 
+   * Este teste verifica se o método active lança um erro ao tentar ativar um usuário com ID inválido.
+   */
   test('active - ID inválido', async ({ assert }) => {
     try {
       await new UserService().active(1, 'Teste')
@@ -155,6 +219,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     }
   })
 
+  /** 
+   * Teste de login de usuário
+   * 
+   * Este teste verifica se o método login autentica um usuário corretamente.
+   */
   test('login', async ({ assert }) => {
     const user = await UserFactory.with('access', 1).make()
     const password = user.password
@@ -167,6 +236,11 @@ test.group('Testes Unitários - UsuarioService', (group) => {
     assert.equal(result.id, user.id)
   })
 
+  /** 
+   * Teste para validação de senha durante o login
+   * 
+   * Este teste verifica se o método login lança um erro ao tentar autenticar com credenciais inválidas.
+   */
   test('login - Validação de senha', async ({ assert }) => {
     try {
       const user = await UserFactory.with('access', 1).make()
@@ -183,7 +257,15 @@ test.group('Testes Unitários - UsuarioService', (group) => {
   })
 })
 
+/** 
+ * Grupo de Testes Unitários para o UsersController
+ * 
+ * Este grupo de testes verifica as funcionalidades do UsersController, incluindo
+ * o cadastro de usuários.
+ */
 test.group('Testes Unitários - UsuarioController', (group) => {
+  
+  // Configuração para iniciar uma transação e executar o rollback a cada teste realizado.
   group.each.setup(async () => {
     await db.beginGlobalTransaction()
     return () => db.rollbackGlobalTransaction()
@@ -194,13 +276,18 @@ test.group('Testes Unitários - UsuarioController', (group) => {
     sinon.restore()
   })
 
+  /** 
+   * Teste para cadastro de usuário com sucesso
+   * 
+   * Este teste verifica se o método create do UsersController cadastra um usuário corretamente.
+   */
   test('Cadastro sucesso', async ({ assert }) => {
     // Cria um método fake para validação.
     const validateStub = sinon.stub(createUser, 'validate').resolves({
       fullname: 'Teste',
       email: 'teste@gmail.com',
       password: 'teste',
-      access: [ 'teste' ]
+      access: ['teste']
     })
 
     // Cria um método fake do serviço de criação.
@@ -233,5 +320,4 @@ test.group('Testes Unitários - UsuarioController', (group) => {
     assert.isTrue(validateStub.calledOnce)
     assert.isTrue(serviceCadastrarStub.calledOnce)
   })
-
 })

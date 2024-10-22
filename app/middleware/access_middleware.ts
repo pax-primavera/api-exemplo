@@ -1,27 +1,41 @@
 import UnauthorizedException from '#exceptions/unauthorized_exception'
 import Access from '#models/access'
 import type { HttpContext } from '@adonisjs/core/http'
-import type { NextFn } from '@adonisjs/core/types/http'
+import { NextFn } from '@adonisjs/core/types/http'
 
-/** -- Autorização de acesso --
+/** 
+ * Middleware de Autorização de Acesso.
  * 
- * Essa classe serve para autorizar o acesso a um recurso (rota). Isso é feito através
- * do token passado pela rota. contendo os dados do usuário.
+ * Esta classe serve para autorizar o acesso a um recurso (rota) com base nas permissões
+ * do usuário, utilizando o token passado na requisição. O middleware verifica se o usuário 
+ * está autenticado e se possui as permissões necessárias para acessar a rota requisitada.
  * 
- * OBS: Essa middleware pode ser agrupada com a middleware de autenticação. Foi separado para permitir a dinamização dos acessos,
- * caso uma rota que exija o token mas não precise de uma validação de acesso. A regra pode ser tratada da forma como o sistema será construido.
- * 
+ * OBS: Essa middleware pode ser combinada com a middleware de autenticação. Foi separada 
+ * para permitir a dinamização dos acessos, permitindo que uma rota exija um token sem 
+ * necessariamente necessitar de uma validação de acesso.
  */
-export default class AcessMiddleware {
+export default class AccessMiddleware {
+  /**
+   * Manipulador principal do middleware.
+   *
+   * @param ctx - O contexto da requisição HTTP, que contém informações sobre o usuário, 
+   *              autenticação e a rota requisitada.
+   * @param next - Função que chama o próximo middleware na pilha.
+   * 
+   * @throws UnauthorizedException - Lança uma exceção se o usuário não estiver autenticado,
+   *                                  se o token for inválido, ou se o usuário não tiver 
+   *                                  as permissões necessárias para acessar a rota.
+   */
   async handle(ctx: HttpContext, next: NextFn) {
-    // Aqui dentro vai sua regra de acesso aos recursos da api, podendo ser totalmente manipulado para atender os requisitos do sistema.
     const auth = ctx.auth
 
-    if (!auth) { // Verifica se o usuário está autenticado!
+    // Verifica se o usuário está autenticado.
+    if (!auth) {
       throw new UnauthorizedException('Não autenticado!', { status: 401, code: 'E_UNAUTHORIZED' })
     }
 
-    try { // Verifica se o token informado é válido!
+    try {
+      // Verifica se o token informado é válido.
       await auth.authenticate()
     } catch (error) {
       throw new UnauthorizedException('Token inválido!', { status: 401, code: 'E_UNAUTHORIZED' })
@@ -29,17 +43,19 @@ export default class AcessMiddleware {
 
     const user = auth.user
 
-    if (!auth.user) { // Verifica se no conteúdo do token possui as informações do usuário!
+    // Verifica se as informações do usuário estão presentes no token.
+    if (!user) {
       throw new UnauthorizedException('Informações de usuário inválidas!', { status: 401, code: 'E_UNAUTHORIZED' })
     }
 
     try {
-      // Busca no banco de dadosse o usuário possui autorização na rota informada!
+      // Busca no banco de dados se o usuário possui autorização para a rota informada.
       await Access.query().where({
         route: ctx.route?.name,
-        userId: user?.id
+        userId: user.id
       }).firstOrFail()
 
+      // Chama o próximo middleware na pilha.
       await next()
     } catch (error) {
       throw new UnauthorizedException('Não autorizado!', { status: 403, code: 'E_FORBIDDEN' })

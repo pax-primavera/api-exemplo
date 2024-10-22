@@ -19,9 +19,3 @@ export interface Access {
     route?: string
     createdBy?: string
 }
-
-export interface UsersResponse {
-    status?: boolean
-    message?: string
-    data?: UserInterface[]
-}
