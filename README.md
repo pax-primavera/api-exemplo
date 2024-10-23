@@ -102,7 +102,3 @@ Descrição dos middlewares utilizados e seus propósitos.
 ## Exceptions
 
 Tratamento de exceções personalizado para melhor controle de erros na API.
-
----
-
-Adapte as seções conforme necessário para refletir exatamente as características e particularidades da sua API em AdonisJS 6.
