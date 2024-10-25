@@ -51,6 +51,35 @@ npm run dev
 yarn dev
 ```
 
+### Uso do Docker
+### Iniciando a Aplicação  
+Para iniciar a aplicação, siga os passos abaixo:
+
+1. Abra um terminal.  
+2. Navegue até o diretório raiz do projeto.  
+3. Execute o seguinte comando para iniciar os contêineres Docker em segundo plano:  
+
+```bash
+docker-compose up -d
+```
+
+Para construir a aplicação com novas atualizações, utilize o comando:  
+
+```bash
+docker-compose up --build
+```
+
+### Parando a Aplicação  
+Para parar a aplicação e desligar os contêineres Docker, siga os passos abaixo:
+
+1. Abra um terminal.  
+2. Navegue até o diretório raiz do projeto.  
+3. Execute o comando:  
+
+```bash
+docker-compose down
+```
+
 ### Endpoints
 
 - **GET** `/api/v1/exemplo`
@@ -234,7 +263,6 @@ Nesta seção, apresentamos os middlewares utilizados na aplicação, juntamente
 ### 4. docs_auth_middleware
 - **Descrição**: O `docs_auth_middleware` é um middleware que protege as rotas que geram documentação da API. Ele verifica se o usuário tem permissão para acessar a documentação, garantindo que apenas usuários autorizados possam visualizar informações sensíveis sobre a API.
 - **Arquivo**: `app/middleware/docs_auth_middleware.ts`
-
 
 
 ## Exceptions
